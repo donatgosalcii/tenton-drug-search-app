@@ -50,7 +50,7 @@ Ky udhëzues supozon se keni një mjedis zhvillimi PHP të konfiguruar. Hapat sp
     *   **Opsioni A (Nëse në GitHub):** Klononi repozitorin:
       ```bash
       git clone https://github.com/donatgosalcii/tenton-drug-search-app
-      cd drug-search-app
+      cd tenton-drug-search-app
       ```
     *   **Opsioni B (Nëse keni një arkiv .zip):** Shpaketoni arkivin dhe lundroni në direktorinë e projektit përmes terminalit/promptit të komandave.
 
