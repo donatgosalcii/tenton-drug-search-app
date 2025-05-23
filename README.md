@@ -16,8 +16,8 @@ Ky është një aplikacion i vogël i ndërtuar me PHP Laravel që lejon përdor
 
 ## Teknologjitë e Përdorura
 
-*   PHP [Shto versionin tënd të PHP, p.sh., 8.1.x]
-*   Laravel Framework [Shto versionin tënd të Laravel, p.sh., v10.x ose v11.x]
+*   PHP
+*   Laravel Framework 
 *   MariaDB/MySQL
 *   OpenFDA API
 *   Tailwind CSS (përmes Laravel Breeze)
