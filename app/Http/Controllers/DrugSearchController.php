@@ -15,25 +15,11 @@ class DrugSearchController extends Controller
         return view('drug-search');
     }
 
-    public function search(Request $request)
+    private function fetchAndProcessDrugData(string $inputNdcCodesString): array
     {
-        $validator = Validator::make($request->all(), [
-            'ndc_codes' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return redirect()->route('drug.search.form')
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        $inputNdcCodesString = $request->input('ndc_codes');
         $ndcCodes = array_unique(array_filter(array_map('trim', explode(',', $inputNdcCodesString))));
-
         if (empty($ndcCodes)) {
-            return redirect()->route('drug.search.form')
-                ->withErrors(['ndc_codes' => 'Ju lutem shkruani të paktën një kod NDC.'])
-                ->withInput(['ndc_codes_submitted' => $inputNdcCodesString]);
+            return [];
         }
 
         $results = [];
@@ -56,7 +42,7 @@ class DrugSearchController extends Controller
                 }
             } catch (\Exception $e) {
                 Log::error('Error querying database for NDC: ' . $ndcCode, ['exception' => $e->getMessage()]);
-                $codesToSearchInApi[] = $ndcCode; // Assume not found and try API
+                $codesToSearchInApi[] = $ndcCode;
             }
         }
 
@@ -108,7 +94,6 @@ class DrugSearchController extends Controller
                         'status' => $response->status(), 'body' => $response->json(), 'url' => $openFdaUrl, 'params' => $apiParams
                     ]);
                 } else {
-                    // Log other actual errors from OpenFDA
                     Log::error('OpenFDA API request failed with an unexpected status.', [
                         'status' => $response->status(), 'body' => $response->body(), 'url' => $openFdaUrl, 'params' => $apiParams
                     ]);
@@ -143,10 +128,70 @@ class DrugSearchController extends Controller
                 $orderedResults[] = $results[$originalCode];
             }
         }
+        return $orderedResults;
+    }
+
+    public function search(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'ndc_codes' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->route('drug.search.form')
+                ->withErrors($validator)
+                ->withInput();
+        }
+        $inputNdcCodesString = $request->input('ndc_codes');
+        $orderedResults = $this->fetchAndProcessDrugData($inputNdcCodesString);
 
         return view('drug-search', [
             'results' => $orderedResults,
             'ndc_codes_submitted' => $inputNdcCodesString
         ]);
+    }
+
+    public function exportCsv(Request $request)
+    {
+        $inputNdcCodesString = $request->input('ndc_codes');
+
+        if (empty($inputNdcCodesString)) {
+            return redirect()->route('drug.search.form')->with('error', 'Nuk ka kode NDC për të eksportuar.');
+        }
+
+        $orderedResults = $this->fetchAndProcessDrugData($inputNdcCodesString);
+
+        if (empty($orderedResults)) {
+            return redirect()->route('drug.search.form')->with('error', 'Nuk u gjetën rezultate për të eksportuar bazuar në kodet e dhëna.');
+        }
+
+        $fileName = "rezultatet_kerkim_ilaçeve_" . date('Y-m-d_H-i-s') . ".csv";
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $columns = ['KODI NDC', 'EMRI PRODUKTIT', 'PRODHUESI', 'LLOJI I PRODUKTIT', 'BURIMI'];
+
+        $callback = function() use($orderedResults, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            foreach ($orderedResults as $drug) {
+                fputcsv($file, [
+                    $drug['ndc_code'],
+                    $drug['brand_name'] ?? ($drug['generic_name'] ?? '-'),
+                    $drug['labeler_name'] ?? '-',
+                    $drug['product_type'] ?? '-',
+                    $drug['source'] ?? '-'
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

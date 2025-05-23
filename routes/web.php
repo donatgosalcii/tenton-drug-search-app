@@ -20,6 +20,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/drug-search', [DrugSearchController::class, 'showSearchForm'])->name('drug.search.form');
     Route::post('/drug-search', [DrugSearchController::class, 'search'])->name('drug.search.submit');
+    Route::get('/drug-search/export-csv', [DrugSearchController::class, 'exportCsv'])->name('drug.search.exportCsv');
 
     Route::get('/stored-drugs', [StoredDrugController::class, 'index'])->name('stored-drugs.index');
     Route::get('/stored-drugs/create', [StoredDrugController::class, 'create'])->name('stored-drugs.create');
