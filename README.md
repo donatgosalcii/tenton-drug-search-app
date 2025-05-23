@@ -49,7 +49,7 @@ Ky udhëzues supozon se keni një mjedis zhvillimi PHP të konfiguruar. Hapat sp
 1.  **Merrni Kodin e Projektit:**
     *   **Opsioni A (Nëse në GitHub):** Klononi repozitorin:
       ```bash
-      git clone <URL_I_REPOZITORIT_TUAJ_KETU_NESE_E_KENI> drug-search-app
+      git clone https://github.com/donatgosalcii/tenton-drug-search-app
       cd drug-search-app
       ```
     *   **Opsioni B (Nëse keni një arkiv .zip):** Shpaketoni arkivin dhe lundroni në direktorinë e projektit përmes terminalit/promptit të komandave.
