@@ -115,15 +115,15 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const searchForm = document.getElementById('drugSearchForm');
-            const loadingSpinner = document.getElementById('loadingSpinner'); // This div now contains the SVG
+            const loadingSpinner = document.getElementById('loadingSpinner');
             const searchButton = document.getElementById('searchButton');
-            const originalButtonText = searchButton.innerHTML; // Store original button text to revert if needed (though page reload handles this)
+            const originalButtonText = searchButton.innerHTML;
 
             if (searchForm && loadingSpinner && searchButton) {
                 searchForm.addEventListener('submit', function (event) {
-                    loadingSpinner.style.display = 'inline-flex'; // Show the spinner div (SVG + text)
+                    loadingSpinner.style.display = 'inline-flex';
                     searchButton.disabled = true;
-                    searchButton.innerHTML = '{{ __("Duke kërkuar...") }}'; // Change button text to only text
+                    searchButton.innerHTML = '{{ __("Duke kërkuar...") }}';
                 });
             }
         });
