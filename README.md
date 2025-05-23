@@ -1,6 +1,6 @@
 # Aplikacioni për Kërkimin e Ilaçeve (Drug Search Application)
 
-Ky është një aplikacion i vogël i ndërtuar me PHP Laravel që lejon përdoruesit e loguar të kërkojnë informacione për ilaçe duke përdorur kodet NDC (National Drug Code). Aplikacioni fillimisht kontrollon një bazë të dhënash lokale dhe, nëse kodi nuk gjendet, bën një kërkesë në API-në e OpenFDA. Rezultatet e gjetura nga OpenFDA ruhen në bazën e të dhënave lokale për kërkime të mëvonshme.
+Ky është një aplikacion i vogël i ndërtuar me PHP Laravel që lejon përdoruesit e loguar (logged in) të kërkojnë informacione për ilaçe duke përdorur kodet NDC (National Drug Code). Aplikacioni fillimisht kontrollon një bazë të dhënash lokale dhe, nëse kodi nuk gjendet, bën një kërkesë në API-në e OpenFDA. Rezultatet e gjetura nga OpenFDA ruhen në bazën e të dhënave lokale për kërkime të mëvonshme. Përdoruesit gjithashtu mund të menaxhojnë ilaçet e ruajtura në databazën lokale dhe të eksportojnë rezultatet e kërkimit.
 
 ## Funksionalitetet Kryesore
 
@@ -11,13 +11,18 @@ Ky është një aplikacion i vogël i ndërtuar me PHP Laravel që lejon përdor
     2.  Nëse nuk gjendet lokalisht, kërkon në API-në e OpenFDA (një thirrje e vetme API për shumë kode NDC).
     3.  Rezultatet e gjetura nga OpenFDA ruhen në bazën e të dhënave lokale.
     4.  Shfaq rezultatet në një tabelë duke treguar burimin (Database, OpenFDA, ose Nuk u Gjet).
+*   **Menaxhimi i Ilaçeve të Ruajtura:**
+    *   Shfaqja e listës së të gjitha ilaçeve të ruajtura në databazën lokale me paginim.
+    *   Mundësia për të shtuar manualisht një ilaç të ri në databazën lokale.
+    *   Mundësia për të fshirë një ilaç të ruajtur nga databaza lokale.
+*   **Eksportimi i Rezultateve:** Mundësia për të eksportuar rezultatet aktuale të kërkimit në një fajll CSV.
 *   **Ndërfaqe Përdoruesi (UI):** Formular kërkimi dhe tabelë rezultatesh e thjeshtë dhe e qartë.
-*   **Tregues i Ngarkimit (Spinner):** Shfaq një tregues vizual gjatë procesimit të kërkesës.
+*   **Tregues i Ngarkimit (Spinner):** Shfaq një tregues vizual gjatë procesimit të kërkesës së kërkimit.
 
 ## Teknologjitë e Përdorura
 
-*   PHP
-*   Laravel Framework 
+*   PHP 8.3.6
+*   Laravel Framework 12.15.0
 *   MariaDB/MySQL
 *   OpenFDA API
 *   Tailwind CSS (përmes Laravel Breeze)
@@ -31,7 +36,7 @@ Ky udhëzues supozon se keni një mjedis zhvillimi PHP të konfiguruar. Hapat sp
 
 ### Parakushtet Universale
 
-*   **PHP:** Versioni [Shto versionin tënd të PHP, p.sh., 8.1 ose më i ri]. (Mund të instalohet përmes XAMPP, WAMP, MAMP, Homebrew në macOS, ose menaxherit të paketave në Linux).
+*   **PHP:** Versioni 8.3.6. (Mund të instalohet përmes XAMPP, WAMP, MAMP, Homebrew në macOS, ose menaxherit të paketave në Linux).
 *   **Composer:** Menaxheri i varësive për PHP. (Shihni [getcomposer.org](https://getcomposer.org) për udhëzime instalimi).
 *   **Node.js dhe NPM:** Për menaxhimin e aseteve frontend. (Shihni [nodejs.org](https://nodejs.org)).
 *   **Server Uebi (Opsional nëse përdorni `php artisan serve`):**
@@ -47,12 +52,12 @@ Ky udhëzues supozon se keni një mjedis zhvillimi PHP të konfiguruar. Hapat sp
 ### Hapat e Përgjithshëm të Instalimit
 
 1.  **Merrni Kodin e Projektit:**
-    *   **Opsioni A (Nëse në GitHub):** Klononi repozitorin:
+    *   **Opsioni A:** Klononi repozitorin:
       ```bash
       git clone https://github.com/donatgosalcii/tenton-drug-search-app
       cd tenton-drug-search-app
       ```
-    *   **Opsioni B (Nëse keni një arkiv .zip):** Shpaketoni arkivin dhe lundroni në direktorinë e projektit përmes terminalit/promptit të komandave.
+    *   **Opsioni B (Nëse keni një arkiv .zip):** Unzip arkivin dhe shkoni në folderin/direktorin e projektit përmes terminalit/promptit të komandave.
 
 2.  **Instaloni Varësitë PHP:**
     Në direktorinë rrënjë të projektit, ekzekutoni:
@@ -122,23 +127,31 @@ Ky udhëzues supozon se keni një mjedis zhvillimi PHP të konfiguruar. Hapat sp
 
 ## Përshkrim i Shkurtër i Logjikës së Implementuar
 
-*   **Rrugët (Routes):** Definohen në `routes/web.php`. Rrugët e autentifikimit sigurohen nga Laravel Breeze (`routes/auth.php`). Rrugët për kërkimin e ilaçeve (`/drug-search`) janë të mbrojtura nga middleware `auth`.
+*   **Rrugët (Routes):** Definohen në `routes/web.php`. Rrugët e autentifikimit sigurohen nga Laravel Breeze (`routes/auth.php`). Rrugët për kërkimin e ilaçeve (`/drug-search`) dhe menaxhimin e ilaçeve të ruajtura (`/stored-drugs`) janë të mbrojtura nga middleware `auth`.
 *   **Kontrolluesi (`DrugSearchController.php`):**
     *   `showSearchForm()`: Shfaq formularin e kërkimit.
-    *   `search()`: Menaxhon logjikën e kërkimit: validezon inputin, kontrollon DB lokale, thërret API-në OpenFDA (me një kërkesë të vetme për shumë kode), ruan rezultatet e reja në DB dhe përgatit të dhënat për shfaqje.
+    *   `search()`: Menaxhon logjikën e kërkimit: validezon inputin, kontrollon DB lokale, thërret API-në OpenFDA, ruan rezultatet e reja në DB dhe përgatit të dhënat për shfaqje.
+    *   `exportCsv()`: Gjeneron dhe shkarkon rezultatet aktuale të kërkimit si një fajll CSV.
+*   **Kontrolluesi (`StoredDrugController.php`):**
+    *   `index()`: Shfaq listën e paginuar të ilaçeve të ruajtura në DB lokale.
+    *   `create()`: Shfaq formularin për të shtuar manualisht një ilaç të ri.
+    *   `store()`: Validezon dhe ruan ilaçin e ri të futur manualisht në DB.
+    *   `destroy()`: Fshin një ilaç të specifikuar nga DB lokale.
 *   **Modeli (`Drug.php`):** Modeli Eloquent për tabelën `drugs`, me fushat e nevojshme (`ndc_code`, `brand_name`, etj.) të definuara si `$fillable`.
 *   **Migrimi:** Krijohet tabela `drugs` me kolonat e specifikuara.
-*   **Pamja (View - `drug-search.blade.php`):** Paraqet formularin dhe tabelën e rezultateve duke përdorur Blade dhe Tailwind CSS. Përfshin një tregues të thjeshtë ngarkimi (spinner) gjatë kërkimit.
+*   **Pamjet (Views):**
+    *   `drug-search.blade.php`: Paraqet formularin e kërkimit, tabelën e rezultateve, dhe butonin e eksportit. Përfshin një tregues ngarkimi (spinner).
+    *   `stored-drugs/index.blade.php`: Shfaq listën e paginuar të ilaçeve të ruajtura me opsione fshirjeje dhe një lidhje për të shtuar ilaçe të reja.
+    *   `stored-drugs/create.blade.php`: Paraqet formularin për shtimin manual të ilaçeve.
 *   **Ndërveprimi me OpenFDA API:** Përdor fasadën `Http` të Laravel për të bërë kërkesa GET.
 
 ## Ide për Përmirësime ose Funksionalitete Shtesë (Pikë Bonus të Mundshme)
 
-*   Përdorimi i Laravel Livewire për një UI më reaktive pa rimbushje të plotë të faqes.
-*   Paginimi për të shfaqur të gjitha ilaçet e ruajtura në bazën e të dhënave lokale.
-*   Eksportimi i rezultateve të kërkimit në formatin CSV.
-*   Mundësia për të fshirë ilaçet e ruajtura nga baza e të dhënave lokale.
-*   Trajtim më i detajuar i gabimeve nga API dhe feedback më i mirë për përdoruesin.
-*   Shtimi i testeve (Unit dhe Feature) për funksionalitetin e kërkimit.
-*   Përmirësim i ndërfaqes së përdoruesit (UI/UX).
-
+*   Përdorimi i Laravel Livewire për një UI më reaktive pa rimbushje të plotë të faqes (veçanërisht për kërkimin).
+*   Trajtim më i detajuar i gabimeve nga API dhe feedback më i mirë për përdoruesin (p.sh., mesazhe specifike kur API-ja nuk është e disponueshme).
+*   Shtimi i testeve (Unit dhe Feature) për të mbuluar funksionalitetin e kërkimit dhe menaxhimit të ilaçeve.
+*   Përmirësim i mëtejshëm i ndërfaqes së përdoruesit (UI/UX).
+*   Mundësia për të modifikuar (edit/update) ilaçet ekzistuese në databazën lokale.
+  
+**KODIMI I APLIKACIONIT ËSHTË BËRË NË SISTEMIN OPERATIV UBUNTU ANDAJ MUND TË KENI PROBLEME ME PATHS**
 ---
