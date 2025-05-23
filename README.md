@@ -151,7 +151,6 @@ Ky udhëzues supozon se keni një mjedis zhvillimi PHP të konfiguruar. Hapat sp
 *   Trajtim më i detajuar i gabimeve nga API dhe feedback më i mirë për përdoruesin (p.sh., mesazhe specifike kur API-ja nuk është e disponueshme).
 *   Shtimi i testeve (Unit dhe Feature) për të mbuluar funksionalitetin e kërkimit dhe menaxhimit të ilaçeve.
 *   Përmirësim i mëtejshëm i ndërfaqes së përdoruesit (UI/UX).
-*   Mundësia për të modifikuar (edit/update) ilaçet ekzistuese në databazën lokale.
   
 **KODIMI I APLIKACIONIT ËSHTË BËRË NË SISTEMIN OPERATIV UBUNTU ANDAJ MUND TË KENI PROBLEME ME PATHS**
 ---
